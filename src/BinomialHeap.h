@@ -74,14 +74,22 @@ private:
     }
     void Swap(shared_ptr<Node> node1, shared_ptr<Node> node2) {
         Key tmp = node1->key;
-
+        node1->key = node2->key;
+        node2->key = tmp;
+        node1->pre_ptr->node = node2;
+        node2->pre_ptr->node = node1;
+        shared_ptr<PrePointer> pre_tmp = node1->pre_ptr;
+        node1->pre_ptr = node2->pre_ptr;
+        node2->pre_ptr = pre_tmp;
     }
 public:
     class Pointer{
     private:
         weak_ptr<PrePointer> ptr_;
     public:
-        Pointer() {}
+        Pointer() {
+            ptr_ = weak_ptr<PrePointer>();
+        }
         Pointer(shared_ptr<PrePointer> ptr){
             this->ptr_ = ptr;
         }
@@ -172,6 +180,7 @@ public:
                     if (ptr->key < ptr->left->key) {
                         shared_ptr<Node> tmp = ptr->left->left;
                         ptr->AddLeftChild(ptr->left);
+                        ptr->left->par = ptr;
                         if (tmp != nullptr) {
                             tmp->right = ptr;
                         }
@@ -187,6 +196,7 @@ public:
                         }
                         new_ptr->right = ptr->right;
                         new_ptr->AddLeftChild(ptr);
+                        ptr->par = new_ptr;
                         ptr = new_ptr;
                     }
                 }
@@ -222,10 +232,36 @@ public:
         }
         shared_ptr<Node> node = ptr.ptr_.lock()->node.lock();
         if (key < node->key) {
-
+            if (node->par.expired()) {
+                node->key = key;
+                if (key < min_->key) {
+                    min_ = node;
+                }
+            }
+            else if (node->par.lock()->key <= key) {
+                node->key = key;
+            }
+            else {
+                Swap(node, node->par.lock());
+                Change(ptr, key);
+            }
         }
         else if (node->key < key) {
-
+            shared_ptr<Node> min = node->right_child;
+            shared_ptr<Node> cur = node->right_child;
+            while (cur != nullptr) {
+                if (cur->key < min->key) {
+                    min = cur;
+                }
+                cur = cur->left;
+            }
+            if (min == nullptr || key <= min->key) {
+                node->key = key;
+            }
+            else {
+                Swap(node, min);
+                Change(ptr, key);
+            }
         }
     }
 };

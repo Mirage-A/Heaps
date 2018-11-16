@@ -72,6 +72,10 @@ private:
             current = current->left;
         }
     }
+    void Swap(shared_ptr<Node> node1, shared_ptr<Node> node2) {
+        Key tmp = node1->key;
+
+    }
 public:
     class Pointer{
     private:
@@ -213,7 +217,16 @@ public:
 
     }
     void Change(Pointer ptr, Key key){
+        if (ptr.ptr_.expired() || ptr.ptr_.lock()->node.expired()) {
+            throw std::invalid_argument("Element does not exist");
+        }
+        shared_ptr<Node> node = ptr.ptr_.lock()->node.lock();
+        if (key < node->key) {
 
+        }
+        else if (node->key < key) {
+
+        }
     }
 };
 

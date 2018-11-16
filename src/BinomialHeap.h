@@ -10,33 +10,45 @@ using std::unique_ptr;
 template <typename Key>
 class BinomialHeap{
 private:
+    struct Node;
+    struct PrePointer {
+    private:
+        PrePointer() {}
+    public:
+        weak_ptr<Node> node;
+        PrePointer(std::weak_ptr<Node> node) : node(node) {};
+    };
     struct Node{
     private:
         Node(){}
     public:
         Key key;
-        shared_ptr<Node> right;
+        weak_ptr<Node> right;
         shared_ptr<Node> left;
-        shared_ptr<Node> left_child;
+        shared_ptr<Node> right_child;
+        weak_ptr<Node> left_child;
         weak_ptr<Node> par;
+        shared_ptr<BinomialHeap::PrePointer> pre_ptr;
         size_t degree;
         bool is_negative_infinity = false;
         Node(Key key){
             this->key = key;
             left = nullptr;
-            right = nullptr;
-            left_child = nullptr;
+            right = weak_ptr<Node>();
+            left_child = weak_ptr<Node>();
+            right_child = nullptr;
             par = weak_ptr<Node>();
             is_negative_infinity = false;
             degree = 0;
         }
         void AddLeftChild(shared_ptr<Node> new_child) {
-            if (left_child != nullptr) {
+            if (!left_child.expired()) {
                 new_child->right = left_child;
-                left_child->left = new_child;
+                left_child.lock()->left = new_child;
             }
             else {
-                new_child->right = nullptr;
+                new_child->right = weak_ptr<Node>();
+                right_child = new_child;
             }
             left_child = new_child;
             new_child->left = nullptr;
@@ -63,14 +75,11 @@ private:
 public:
     class Pointer{
     private:
-        weak_ptr<Node> ptr_;
+        weak_ptr<PrePointer> ptr_;
     public:
         Pointer() {}
-        Pointer(shared_ptr<Node> ptr){
+        Pointer(shared_ptr<PrePointer> ptr){
             this->ptr_ = ptr;
-        }
-        weak_ptr<Node> GetPtr() const{
-            return ptr_;
         }
         friend class BinomialHeap;
     };
@@ -94,11 +103,11 @@ public:
     Key ExtractMin(){
         Key res = GetMin();
         BinomialHeap children;
-        shared_ptr<Node> ptr = min_->left_child;
+        shared_ptr<Node> ptr = min_->left_child.lock();
         if (ptr != nullptr) {
-            while (ptr->right != nullptr) {
+            while (!ptr->right.expired()) {
                 ptr->par = ptr;
-                ptr = ptr->right;
+                ptr = ptr->right.lock();
             }
             ptr->par = ptr;
         }
@@ -106,14 +115,14 @@ public:
         if (min_->left != nullptr) {
             min_->left->right = min_->right;
         }
-        if (min_->right != nullptr) {
-            min_->right->left = min_->left;
+        if (!min_->right.expired()) {
+            min_->right.lock()->left = min_->left;
         }
         else {
             right_ = min_->left;
         }
+        min_->left = shared_ptr<Node>(nullptr);
         Merge(children);
-        ValidateMin();
         return res;
     }
     void Merge(BinomialHeap &other_heap){
@@ -121,7 +130,6 @@ public:
             right_ = other_heap.right_;
             min_ = other_heap.min_;
             other_heap.Clear();
-            ValidateMin();
         }
         else if (!other_heap.IsEmpty()) {
             shared_ptr<Node> ptr1 = right_;
@@ -144,8 +152,8 @@ public:
                     shared_ptr<Node> tmp = ptr2->left;
                     ptr2->right = ptr1->right;
                     ptr2->left = ptr1;
-                    if (ptr1->right != nullptr) {
-                        ptr1->right->left = ptr2;
+                    if (!ptr1->right.expired()) {
+                        ptr1->right.lock()->left = ptr2;
                     }
                     else {
                         right_ = ptr2;
@@ -167,8 +175,8 @@ public:
                     }
                     else {
                         shared_ptr<Node> new_ptr = ptr->left;
-                        if (ptr->right != nullptr) {
-                            ptr->right->left = new_ptr;
+                        if (!ptr->right.expired()) {
+                            ptr->right.lock()->left = new_ptr;
                         }
                         else {
                             right_ = new_ptr;
@@ -182,20 +190,24 @@ public:
                     ptr = ptr->left;
                 }
             }
-            ValidateMin();
             other_heap.Clear();
         }
+        ValidateMin();
     }
     Pointer Insert(Key key){
-        Node* node_ptr = new Node(key);
-        shared_ptr<Node> ptr(node_ptr);
-        Pointer res(ptr);
-        BinomialHeap<Key> heap(ptr);
+        Node* node = new Node(key);
+        shared_ptr<Node> node_ptr(node);
+        PrePointer* pre = new PrePointer(node_ptr);
+        shared_ptr<PrePointer> pre_ptr(pre);
+        node_ptr->pre_ptr = pre_ptr;
+        pre_ptr->node = node_ptr;
+        Pointer res(pre_ptr);
+        BinomialHeap<Key> heap(node_ptr);
         Merge(heap);
         return res;
     }
     void Delete(Pointer ptr){
-        if (ptr.GetPtr().expired()) {
+        if (ptr.ptr_.expired() || ptr.ptr_.lock()->node.expired()) {
             throw std::invalid_argument("Element does not exist");
         }
 

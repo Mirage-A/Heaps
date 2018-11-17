@@ -43,8 +43,12 @@ TEST_F(ClassDeclaration, binomial_heap_basics){
     heap.Change(ptrs.Get(6), 5);
     heap.Change(ptrs.Get(1), -2);
     heap.Change(ptrs.Get(0), 0);
-    int a[]{-2, -1, 0, 2, 2, 3, 5, 5, 9, 11};
-    for (int i = 0; i < 10; ++i) {
+    heap.Delete(ptrs.Get(6));
+    heap.Delete(ptrs.Get(9));
+    ASSERT_ANY_THROW(heap.Delete(ptrs.Get(6)));
+    ASSERT_ANY_THROW(heap.Change(ptrs.Get(9), 12345));
+    int a[] {-2, -1, 0, 2, 2, 3, 5, 11};
+    for (int i = 0; i < 8; ++i) {
         ASSERT_EQ(a[i], heap.ExtractMin());
     }
 }

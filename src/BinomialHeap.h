@@ -16,7 +16,9 @@ private:
         PrePointer() {}
     public:
         weak_ptr<Node> node;
-        PrePointer(std::weak_ptr<Node> node) : node(node) {};
+        PrePointer(std::weak_ptr<Node> node) {
+            this->node = node;
+        };
     };
     struct Node{
     private:
@@ -37,7 +39,7 @@ private:
             right = weak_ptr<Node>();
             left_child = weak_ptr<Node>();
             right_child = nullptr;
-            par = weak_ptr<Node>();
+            par.reset();
             is_negative_infinity = false;
             degree = 0;
         }
@@ -52,7 +54,6 @@ private:
             }
             left_child = new_child;
             new_child->left = nullptr;
-            new_child->par = weak_ptr<Node>();
             ++degree;
         }
     };
@@ -86,12 +87,12 @@ public:
     class Pointer{
     private:
         weak_ptr<PrePointer> ptr_;
+        Pointer(shared_ptr<PrePointer> ptr){
+            this->ptr_ = weak_ptr<PrePointer>(ptr);
+        }
     public:
         Pointer() {
             ptr_ = weak_ptr<PrePointer>();
-        }
-        Pointer(shared_ptr<PrePointer> ptr){
-            this->ptr_ = ptr;
         }
         friend class BinomialHeap;
     };
@@ -115,15 +116,15 @@ public:
     Key ExtractMin(){
         Key res = GetMin();
         BinomialHeap children;
-        shared_ptr<Node> ptr = min_->left_child.lock();
+        shared_ptr<Node> ptr = min_->right_child;
         if (ptr != nullptr) {
-            while (!ptr->right.expired()) {
-                ptr->par = ptr;
-                ptr = ptr->right.lock();
+            while (ptr->left != nullptr) {
+                ptr->par.reset();
+                ptr = ptr->left;
             }
-            ptr->par = ptr;
+            ptr->par.reset();
         }
-        children.right_ = ptr;
+        children.right_ = min_->right_child;
         if (min_->left != nullptr) {
             min_->left->right = min_->right;
         }
@@ -179,8 +180,8 @@ public:
                 if (ptr->degree == ptr->left->degree) {
                     if (ptr->key < ptr->left->key) {
                         shared_ptr<Node> tmp = ptr->left->left;
-                        ptr->AddLeftChild(ptr->left);
                         ptr->left->par = ptr;
+                        ptr->AddLeftChild(ptr->left);
                         if (tmp != nullptr) {
                             tmp->right = ptr;
                         }
@@ -195,8 +196,8 @@ public:
                             right_ = new_ptr;
                         }
                         new_ptr->right = ptr->right;
-                        new_ptr->AddLeftChild(ptr);
                         ptr->par = new_ptr;
+                        new_ptr->AddLeftChild(ptr);
                         ptr = new_ptr;
                     }
                 }
@@ -224,7 +225,15 @@ public:
         if (ptr.ptr_.expired() || ptr.ptr_.lock()->node.expired()) {
             throw std::invalid_argument("Element does not exist");
         }
-
+        shared_ptr<Node> node = ptr.ptr_.lock()->node.lock();
+        if (node->par.expired()) {
+            min_ = node;
+            ExtractMin();
+        }
+        else {
+            Swap(node, node->par.lock());
+            Delete(ptr);
+        }
     }
     void Change(Pointer ptr, Key key){
         if (ptr.ptr_.expired() || ptr.ptr_.lock()->node.expired()) {

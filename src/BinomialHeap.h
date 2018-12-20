@@ -8,113 +8,48 @@ using std::shared_ptr;
 using std::unique_ptr;
 
 template <typename Key>
-class BinomialHeap{
+class BinomialHeap {
 private:
     struct Node;
-    struct PrePointer {
-    private:
-        PrePointer() {}
-    public:
-        weak_ptr<Node> node;
-        PrePointer(std::weak_ptr<Node> node) {
-            this->node = node;
-        };
-    };
-    struct Node{
-    private:
-        Node(){}
-    public:
-        Key key;
-        weak_ptr<Node> right;
-        shared_ptr<Node> left;
-        shared_ptr<Node> right_child;
-        weak_ptr<Node> left_child;
-        weak_ptr<Node> par;
-        shared_ptr<BinomialHeap::PrePointer> pre_ptr;
-        size_t degree;
-        bool is_negative_infinity = false;
-        Node(Key key){
-            this->key = key;
-            left = nullptr;
-            right = weak_ptr<Node>();
-            left_child = weak_ptr<Node>();
-            right_child = nullptr;
-            par.reset();
-            is_negative_infinity = false;
-            degree = 0;
-        }
-        void AddLeftChild(shared_ptr<Node> new_child) {
-            if (!left_child.expired()) {
-                new_child->right = left_child;
-                left_child.lock()->left = new_child;
-            }
-            else {
-                new_child->right = weak_ptr<Node>();
-                right_child = new_child;
-            }
-            left_child = new_child;
-            new_child->left = nullptr;
-            ++degree;
-        }
-    };
-    shared_ptr<Node> right_;
-    shared_ptr<Node> min_;
-    BinomialHeap(shared_ptr<Node> node){
-        right_ = node;
-        min_ = node;
-    }
-    void ValidateMin(){
-        shared_ptr<Node> current = right_;
-        min_ = right_;
-        while (current != nullptr){
-            if (current->key < min_->key){
-                min_ = current;
-            }
-            current = current->left;
-        }
-    }
-    void Swap(shared_ptr<Node> node1, shared_ptr<Node> node2) {
-        Key tmp = node1->key;
-        node1->key = node2->key;
-        node2->key = tmp;
-        node1->pre_ptr->node = node2;
-        node2->pre_ptr->node = node1;
-        shared_ptr<PrePointer> pre_tmp = node1->pre_ptr;
-        node1->pre_ptr = node2->pre_ptr;
-        node2->pre_ptr = pre_tmp;
-    }
+    struct PrePointer;
 public:
-    class Pointer{
+    class Pointer {
     private:
         weak_ptr<PrePointer> ptr_;
-        Pointer(shared_ptr<PrePointer> ptr){
+        Pointer(shared_ptr<PrePointer> ptr) {
             this->ptr_ = weak_ptr<PrePointer>(ptr);
         }
+
     public:
         Pointer() {
             ptr_ = weak_ptr<PrePointer>();
         }
         friend class BinomialHeap;
     };
+
     BinomialHeap(){
         right_ = nullptr;
         min_ = nullptr;
     }
-    bool IsEmpty() const{
+
+    bool IsEmpty() const {
         return (right_ == nullptr);
     }
-    void Clear(){
+
+    void Clear() {
         right_ = nullptr;
         min_ = nullptr;
     }
-    Key GetMin() const{
-        if(IsEmpty()){
+
+    Key GetMin() const {
+        if(IsEmpty()) {
             throw std::logic_error("Heap is empty");
         }
         return min_->key;
     }
-    Key ExtractMin(){
-        Key res = GetMin();
+
+    Key ExtractMin() {
+        Key extracted_minimum = GetMin();
         BinomialHeap children;
         shared_ptr<Node> ptr = min_->right_child;
         if (ptr != nullptr) {
@@ -136,9 +71,10 @@ public:
         }
         min_->left = shared_ptr<Node>(nullptr);
         Merge(children);
-        return res;
+        return extracted_minimum;
     }
-    void Merge(BinomialHeap &other_heap){
+
+    void Merge(BinomialHeap &other_heap) {
         if (IsEmpty()) {
             right_ = other_heap.right_;
             min_ = other_heap.min_;
@@ -209,7 +145,8 @@ public:
         }
         ValidateMin();
     }
-    Pointer Insert(Key key){
+
+    Pointer Insert(Key key) {
         Node* node = new Node(key);
         shared_ptr<Node> node_ptr(node);
         PrePointer* pre = new PrePointer(node_ptr);
@@ -221,7 +158,8 @@ public:
         Merge(heap);
         return res;
     }
-    void Delete(Pointer ptr){
+
+    void Delete(Pointer ptr) {
         if (ptr.ptr_.expired() || ptr.ptr_.lock()->node.expired()) {
             throw std::invalid_argument("Element does not exist");
         }
@@ -235,7 +173,8 @@ public:
             Delete(ptr);
         }
     }
-    void Change(Pointer ptr, Key key){
+
+    void Change(Pointer ptr, Key key) {
         if (ptr.ptr_.expired() || ptr.ptr_.lock()->node.expired()) {
             throw std::invalid_argument("Element does not exist");
         }
@@ -273,6 +212,88 @@ public:
             }
         }
     }
+
+private:
+    struct PrePointer {
+    private:
+        PrePointer() {}
+    public:
+        weak_ptr<Node> node;
+        PrePointer(std::weak_ptr<Node> node) {
+            this->node = node;
+        };
+    };
+
+    struct Node {
+    private:
+        Node() {}
+
+    public:
+        Node(Key key) {
+            this->key = key;
+            left = nullptr;
+            right = weak_ptr<Node>();
+            left_child = weak_ptr<Node>();
+            right_child = nullptr;
+            par.reset();
+            is_negative_infinity = false;
+            degree = 0;
+        }
+
+        void AddLeftChild(shared_ptr<Node> new_child) {
+            if (!left_child.expired()) {
+                new_child->right = left_child;
+                left_child.lock()->left = new_child;
+            }
+            else {
+                new_child->right = weak_ptr<Node>();
+                right_child = new_child;
+            }
+            left_child = new_child;
+            new_child->left = nullptr;
+            ++degree;
+        }
+
+        Key key;
+        weak_ptr<Node> right;
+        shared_ptr<Node> left;
+        shared_ptr<Node> right_child;
+        weak_ptr<Node> left_child;
+        weak_ptr<Node> par;
+        shared_ptr<BinomialHeap::PrePointer> pre_ptr;
+        size_t degree;
+        bool is_negative_infinity = false;
+    };
+
+    BinomialHeap(shared_ptr<Node> node) {
+        right_ = node;
+        min_ = node;
+    }
+
+    void ValidateMin() {
+        shared_ptr<Node> current = right_;
+        min_ = right_;
+        while (current != nullptr) {
+            if (current->key < min_->key) {
+                min_ = current;
+            }
+            current = current->left;
+        }
+    }
+
+    void Swap(shared_ptr<Node> node1, shared_ptr<Node> node2) {
+        Key tmp = node1->key;
+        node1->key = node2->key;
+        node2->key = tmp;
+        node1->pre_ptr->node = node2;
+        node2->pre_ptr->node = node1;
+        shared_ptr<PrePointer> pre_tmp = node1->pre_ptr;
+        node1->pre_ptr = node2->pre_ptr;
+        node2->pre_ptr = pre_tmp;
+    }
+
+    shared_ptr<Node> right_;
+    shared_ptr<Node> min_;
 };
 
 #endif //BINOMIALHEAP_BINOMIALHEAP_H

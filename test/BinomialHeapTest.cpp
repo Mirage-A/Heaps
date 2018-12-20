@@ -6,11 +6,12 @@
 
 using testing::Eq;
 
-class ClassDeclaration : public testing::Test{
+class ClassDeclaration : public testing::Test {
 public:
     ClassDeclaration(){}
 };
-TEST_F(ClassDeclaration, binomial_heap_basics){
+
+TEST_F(ClassDeclaration, binomial_heap_basics) {
     BinomialHeap<int> heap;
     ASSERT_ANY_THROW(heap.GetMin());
     ASSERT_ANY_THROW(heap.ExtractMin());
@@ -32,7 +33,10 @@ TEST_F(ClassDeclaration, binomial_heap_basics){
     ASSERT_EQ(5, heap.ExtractMin());
     ASSERT_EQ(6, heap.ExtractMin());
     ASSERT_ANY_THROW(heap.ExtractMin());
+}
 
+TEST_F(ClassDeclaration, binomial_heap_pointers) {
+    BinomialHeap<int> heap;
     Vector<BinomialHeap<int>::Pointer> ptrs;
     for (int i = 0; i < 10; ++i) {
         ptrs.PushBack(heap.Insert(i));
@@ -53,7 +57,28 @@ TEST_F(ClassDeclaration, binomial_heap_basics){
     }
 }
 
-TEST_F(ClassDeclaration, binomial_heap_speed){
+TEST_F(ClassDeclaration, binomial_heap_merge) {
+    BinomialHeap<int> heap;
+    BinomialHeap<int> other_heap;
+
+    heap.Insert(2);
+    heap.Insert(-1);
+    heap.Insert(11);
+    heap.Insert(3);
+
+    other_heap.Insert(0);
+    other_heap.Insert(-2);
+    other_heap.Insert(5);
+    other_heap.Insert(2);
+
+    heap.Merge(other_heap);
+    int a[] {-2, -1, 0, 2, 2, 3, 5, 11};
+    for (int i = 0; i < 8; ++i) {
+        ASSERT_EQ(a[i], heap.ExtractMin());
+    }
+}
+
+TEST_F(ClassDeclaration, binomial_heap_speed) {
     std::cout << "==== BINOMIAL ====" << std::endl;
     int st = clock();
     BinomialHeap<int> heap;

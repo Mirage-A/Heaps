@@ -5,11 +5,12 @@
 
 using testing::Eq;
 
-class ClassDeclaration : public testing::Test{
+class ClassDeclaration : public testing::Test {
 public:
     ClassDeclaration(){}
 };
-TEST_F(ClassDeclaration, vector_basics){
+
+TEST_F(ClassDeclaration, vector_basics) {
     Vector<int> v;
     ASSERT_TRUE(v.IsEmpty());
     ASSERT_EQ(0, v.GetSize());
@@ -29,7 +30,8 @@ TEST_F(ClassDeclaration, vector_basics){
     ASSERT_EQ(4, v.Get(0));
     ASSERT_EQ(2, v.GetSize());
 }
-TEST_F(ClassDeclaration, vector_templating){
+
+TEST_F(ClassDeclaration, vector_templating) {
     Vector<Vector<int>> v;
     ASSERT_EQ(0, v.GetSize());
     Vector<int> v0;
@@ -38,14 +40,16 @@ TEST_F(ClassDeclaration, vector_templating){
     ASSERT_EQ(1, v0.GetSize());
     ASSERT_EQ(0, v.Get(0).GetSize());
 }
-TEST_F(ClassDeclaration, vector_pointers){
+
+TEST_F(ClassDeclaration, vector_pointers) {
     Vector<int*> v;
     v.PushBack(new int(123));
     v.PushBack(new int(321));
     ASSERT_EQ(123, *v.Get(0));
     ASSERT_EQ(321, *v.Get(1));
 }
-TEST_F(ClassDeclaration, vector_throwing){
+
+TEST_F(ClassDeclaration, vector_throwing) {
     Vector<int> v;
     ASSERT_ANY_THROW(v.Set(0, 0));
     v.PushBack(1);
@@ -53,7 +57,8 @@ TEST_F(ClassDeclaration, vector_throwing){
     ASSERT_ANY_THROW(v.Set(1, 1));
     ASSERT_ANY_THROW(v.IncreaseCapacityTo(0));
 }
-TEST_F(ClassDeclaration, vector_capacity){
+
+TEST_F(ClassDeclaration, vector_capacity) {
     Vector<int> v;
     v.IncreaseCapacity();
     v.IncreaseCapacityFor(1);
@@ -84,9 +89,10 @@ TEST_F(ClassDeclaration, vector_capacity){
     v.ShrinkToFit();
     ASSERT_EQ(3, v.GetCapacity());
 }
-TEST_F(ClassDeclaration, vector_memory){
+
+TEST_F(ClassDeclaration, vector_memory) {
     Vector<int> v;
-    for (int i = 0; i < 10; i++){ //Make more iterations if u want to, 10^5 works fine
+    for (int i = 0; i < 10; i++) { //Make more iterations if u want to, 10^5 works fine
         v.IncreaseCapacityFor(1);
     }
 }

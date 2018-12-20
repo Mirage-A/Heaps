@@ -5,11 +5,11 @@
 
 using testing::Eq;
 
-class ClassDeclaration : public testing::Test{
+class ClassDeclaration : public testing::Test {
 public:
     ClassDeclaration(){}
 };
-TEST_F(ClassDeclaration, binary_heap_basics){
+TEST_F(ClassDeclaration, binary_heap_basics) {
     Heap<int> heap;
     ASSERT_TRUE(heap.IsEmpty());
     ASSERT_EQ(0, heap.GetSize());
@@ -49,12 +49,12 @@ TEST_F(ClassDeclaration, binary_heap_basics){
     ASSERT_TRUE(heap.IsEmpty());
     ASSERT_TRUE(heap.IsValid());
 }
-TEST_F(ClassDeclaration, binary_heap_mass_constructor){
+TEST_F(ClassDeclaration, binary_heap_mass_constructor) {
     int* arr = new int[5]{2, 3, 5, 1, 4};
     Heap<int> heap(arr+0, arr+5);
     ASSERT_TRUE(heap.IsValid());
 }
-TEST_F(ClassDeclaration, binary_heap_pointers){
+TEST_F(ClassDeclaration, binary_heap_pointers) {
     int* arr = new int[5]{7, 3, 5, 1, 4};
     Heap<int> heap(arr+0, arr+5);
     ASSERT_FALSE(heap.IsOptimized());
@@ -103,7 +103,7 @@ TEST_F(ClassDeclaration, binary_heap_pointers){
     ASSERT_EQ(0, heap.ExtractMin());
     ASSERT_ANY_THROW(heap.Remove(ptr7));
 }
-TEST_F(ClassDeclaration, binary_heap_optimization){
+TEST_F(ClassDeclaration, binary_heap_optimization) {
     Heap<int> heapy;
     heapy.Insert(0);
     ASSERT_ANY_THROW(heapy.Optimize(1, 1));
@@ -116,7 +116,7 @@ TEST_F(ClassDeclaration, binary_heap_optimization){
 
 }
 
-TEST_F(ClassDeclaration, binary_heap_speed){
+TEST_F(ClassDeclaration, binary_heap_speed) {
     std::cout << "==== BINARY ====" << std::endl;
     int st = clock();
     Heap<int> heap;
@@ -124,7 +124,7 @@ TEST_F(ClassDeclaration, binary_heap_speed){
         heap.Insert(i*2);
     }
     int end = clock();
-    std::cout << "1kk random inserts: " << end - st  << " ms" << std::endl;
+    std::cout << "1kk inserts: " << end - st  << " ms" << std::endl;
     for (int i = 0; i < 1000000; ++i) {
         heap.Insert(1+i*2);
     }
